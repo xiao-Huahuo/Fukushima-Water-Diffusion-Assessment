@@ -1,0 +1,33 @@
+# 忽略所有 NetCDF 文件
+*.nc
+
+# Python 编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# 虚拟环境
+env/
+venv/
+.Python/
+
+# IDE 和编辑器文件
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
+
+# Pytest 缓存
+.pytest_cache/
+
+# 构建和分发文件
+build/
+dist/
+*.zip
+*.tar.gz
