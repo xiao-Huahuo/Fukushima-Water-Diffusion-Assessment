@@ -181,3 +181,4 @@ gif文件输出于`outputs/figures/gif/H3_surface_animation.gif`.
 ```shell
 python utils/gif.py
 ```
+![海水扩散GIF](./outputs/figures/gif/H3_surface_animation.gif)
