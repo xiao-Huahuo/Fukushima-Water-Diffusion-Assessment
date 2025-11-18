@@ -45,7 +45,7 @@ from visualize.util_34_plot_mission1_sr90_surface_concentration_contour import p
 from visualize.util_35_plot_mission1_c14_depth_distribution_boxen import plot_c14_depth_distribution_boxen
 from visualize.util_36_plot_mission1_nuclide_time_series_facetgrid import plot_nuclide_time_series_facetgrid
 from visualize.util_37_plot_mission1_sr90_arrival_time_scatter_3d import plot_sr90_arrival_time_scatter_3d
-from visualize.util_38_plot_mission1_i129_surface_concentration_animation import plot_i129_surface_concentration_animation
+#from visualize.util_38_plot_mission1_i129_global_diffusion_quiver_map import plot_i129_global_diffusion_quiver_map # Changed from animation to quiver map
 from visualize.util_39_plot_mission2_risk_score_distribution_hist import plot_risk_score_distribution_hist
 from visualize.util_40_plot_mission2_indicator_pairplot import plot_indicator_pairplot
 from visualize.util_41_plot_mission2_weights_pie_chart import plot_weights_pie_chart
@@ -111,23 +111,35 @@ from visualize.util_98_plot_mission1_h3_200m_concentration_3d_final import plot_
 from visualize.util_99_plot_mission1_c14_200m_concentration_3d_final import plot_c14_200m_concentration_3d_final
 from visualize.util_100_plot_mission1_sr90_200m_concentration_3d_final import plot_sr90_200m_concentration_3d_final
 
+# 导入新的绘图脚本
+from visualize.plot_key_points_concentration import plot_key_points_concentration
 
-def run_all_visualizations():
+
+def get_res_string(resolution):
+    """根据分辨率生成对应的字符串，例如 1.0 -> '1', 0.5 -> '0p5'"""
+    if resolution == 1.0:
+        return "1"
+    else:
+        return str(resolution).replace('.', 'p')
+
+def run_all_visualizations(resolution=1.0):
     print("=" * 60)
-    print("开始运行所有可视化脚本...")
+    print(f"开始运行所有可视化脚本 (分辨率: {resolution}°)...")
     print("=" * 60)
 
     # --- 全局中文显示设置 ---
     plt.rcParams['font.sans-serif'] = ["SimHei"]  # 使用SimHei字体
     plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
+    res_str = get_res_string(resolution)
+
     # 统一设置数据输入路径
     INPUT_PATHS = {
         # Mission 1 outputs
-        'mission1_h3_nc': "outputs/mission1/H3/H3.nc",
-        'mission1_c14_nc': "outputs/mission1/C14/C14.nc",
-        'mission1_sr90_nc': "outputs/mission1/Sr90/Sr90.nc",
-        'mission1_i129_nc': "outputs/mission1/I129/I129.nc",
+        'mission1_h3_nc': os.path.join("outputs", "mission1", "H3", "H3.nc"),
+        'mission1_c14_nc': os.path.join("outputs", "mission1", "C14", "C14.nc"),
+        'mission1_sr90_nc': os.path.join("outputs", "mission1", "Sr90", "Sr90.nc"),
+        'mission1_i129_nc': os.path.join("outputs", "mission1", "I129", "I129.nc"),
         
         # Mission 2 outputs
         'mission2_raw_indicators_csv': "outputs/mission2/raw_indicators.csv",
@@ -150,114 +162,116 @@ def run_all_visualizations():
 
     # 定义所有要运行的绘图函数及其名称
     plot_functions = [
-        ("任务一 H3 表面浓度热图", plot_h3_surface_concentration_heatmap, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 到达时间地图", plot_sr90_arrival_time_map, OUTPUT_PNG_DIR),
-        ("任务一 各核素源点浓度对比曲线", plot_nuclide_comparison_line_plot, OUTPUT_PNG_DIR),
-        ("任务二 原始指标各国对比柱状图", plot_raw_indicators_bar_chart, OUTPUT_PNG_DIR),
-        ("任务二 标准化指标热力图", plot_normalized_indicators_heatmap, OUTPUT_PNG_DIR),
-        ("任务二 权重对比柱状图", plot_weights_comparison_bar_chart, OUTPUT_PNG_DIR),
-        ("任务二 综合风险得分与分类柱状图", plot_risk_score_classification_bar_chart, OUTPUT_PNG_DIR),
-        ("任务二 K-means 肘部法则图", plot_elbow_method_plot, OUTPUT_PNG_DIR),
-        ("任务三 帕累托前沿三维散点图", plot_pareto_front_3d_scatter, OUTPUT_PNG_DIR),
-        ("任务三 环境影响时间序列图", plot_environmental_impact_timeseries, OUTPUT_PNG_DIR),
-        ("任务一 H3 浓度深度剖面图", plot_h3_depth_profile, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 港口浓度时间序列图", plot_sr90_time_series_at_ports, OUTPUT_PNG_DIR),
-        ("任务一 C14 三维浓度切片图", plot_c14_3d_concentration_slice, OUTPUT_PNG_DIR),
-        ("任务一 I129 全球扩散快照", plot_i129_global_diffusion_snapshots, OUTPUT_PNG_DIR),
-        ("任务一 各核素表面浓度对比图", plot_all_nuclides_surface_comparison, OUTPUT_PNG_DIR),
-        ("任务一 H3 浓度超阈值区域时间序列图", plot_h3_concentration_exceedance_area, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 深度积分浓度地图", plot_sr90_depth_integrated_concentration_map, OUTPUT_PNG_DIR),
-        ("任务二 各国风险指标雷达图", plot_country_radar_chart, OUTPUT_PNG_DIR),
-        ("任务二 综合风险得分聚类散点图", plot_risk_score_scatter_with_clusters, OUTPUT_PNG_DIR),
-        ("任务二 风险等级分布饼图", plot_risk_level_distribution, OUTPUT_PNG_DIR),
-        ("任务二 各指标对综合风险得分的贡献度", plot_indicator_contribution_to_score, OUTPUT_PNG_DIR),
-        ("任务二 各国在不同风险维度上的加权得分", plot_risk_dimension_comparison, OUTPUT_PNG_DIR),
-        ("任务二 标准化风险指标箱线图", plot_normalized_indicators_boxplot, OUTPUT_PNG_DIR),
-        ("任务二 标准化风险指标相关性热图", plot_correlation_heatmap, OUTPUT_PNG_DIR),
-        ("任务三 帕累托前沿二维投影图", plot_pareto_front_2d_projections, OUTPUT_PNG_DIR),
-        ("任务三 处理方案成本构成图", plot_scheme_cost_breakdown, OUTPUT_PNG_DIR),
-        ("任务三 各核素达标时间对比图", plot_nuclide_compliance_time_comparison, OUTPUT_PNG_DIR),
-        ("任务三 处理方案决策矩阵热图", plot_decision_matrix_heatmap, OUTPUT_PNG_DIR),
-        ("任务三 各核素对环境影响的贡献图", plot_environmental_impact_by_nuclide, OUTPUT_PNG_DIR),
-        ("任务三 成本 vs 达标时间散点图", plot_cost_vs_compliance_time, OUTPUT_PNG_DIR),
-        ("任务一 H3 表面浓度小提琴图", plot_h3_surface_concentration_violin, OUTPUT_PNG_DIR),
-        ("任务一 各核素到达时间KDE图", plot_nuclide_arrival_time_kde, OUTPUT_PNG_DIR),
-        ("任务一 H3 深度-时间热图", plot_h3_depth_time_heatmap, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 表面浓度等高线图", plot_sr90_surface_concentration_contour, OUTPUT_PNG_DIR),
-        ("任务一 C14 深度分布箱线图", plot_c14_depth_distribution_boxen, OUTPUT_PNG_DIR),
-        ("任务一 各核素时间序列分面图", plot_nuclide_time_series_facetgrid, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 到达时间3D散点图", plot_sr90_arrival_time_scatter_3d, OUTPUT_PNG_DIR),
-        ("任务一 I129 表面浓度扩散动画", plot_i129_surface_concentration_animation, OUTPUT_GIF_DIR),
-        ("任务二 综合风险得分分布直方图", plot_risk_score_distribution_hist, OUTPUT_PNG_DIR),
-        ("任务二 指标两两关系图", plot_indicator_pairplot, OUTPUT_PNG_DIR),
-        ("任务二 权重饼图", plot_weights_pie_chart, OUTPUT_PNG_DIR),
-        ("任务二 综合风险得分Swarmplot", plot_risk_score_swarmplot, OUTPUT_PNG_DIR),
-        ("任务三 帕累托前沿平行坐标图", plot_pareto_front_parallel_coordinates, OUTPUT_PNG_DIR),
-        ("任务三 核素去除率对比热图", plot_nuclide_eta_comparison_heatmap, OUTPUT_PNG_DIR),
-        ("任务三 成本 vs 环境影响联合分布图", plot_cost_vs_environmental_impact_jointplot, OUTPUT_PNG_DIR),
-        ("任务三 帕累托前沿散点矩阵图", plot_pareto_front_scatter_matrix, OUTPUT_PNG_DIR),
-        ("任务三 核素半衰期对比图", plot_nuclide_decay_half_life_bar, OUTPUT_PNG_DIR),
-        ("任务三 成本 vs 达标时间分面图", plot_cost_vs_compliance_time_facetgrid, OUTPUT_PNG_DIR),
-        ("任务三 环境影响时间序列线图", plot_environmental_impact_timeseries_stacked, OUTPUT_PNG_DIR),
-        ("任务三 目标权衡散点图", plot_objective_tradeoff_scatter, OUTPUT_PNG_DIR),
-        ("任务一 各核素全球最大浓度对比图", plot_nuclide_max_concentration_comparison, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 深度切片动画", plot_sr90_depth_slice_animation, OUTPUT_GIF_DIR),
-        ("任务一 源项强度对比图", plot_mission1_source_term_comparison, OUTPUT_PNG_DIR),
-        ("任务二 风险等级排序热图", plot_risk_score_heatmap_by_indicator, OUTPUT_PNG_DIR),
-        ("任务二 风险得分KDE分面图", plot_risk_score_distribution_kde_facetgrid, OUTPUT_PNG_DIR),
-        ("任务二 权重堆叠柱状图", plot_weights_stacked_bar_chart, OUTPUT_PNG_DIR),
-        ("任务二 风险维度小提琴图", plot_risk_score_violin_by_dimension, OUTPUT_PNG_DIR),
-        ("任务二 风险得分聚类热图", plot_risk_score_clustermap, OUTPUT_PNG_DIR),
-        ("任务三 帕累托前沿雷达图", plot_pareto_front_radar_chart, OUTPUT_PNG_DIR),
-        ("任务三 目标权衡两两关系图", plot_objective_tradeoff_pairplot, OUTPUT_PNG_DIR),
-        ("任务三 环境影响箱线图", plot_environmental_impact_boxplot_by_scheme, OUTPUT_PNG_DIR),
-        ("任务三 成本分布直方图", plot_cost_distribution_hist, OUTPUT_PNG_DIR),
-        ("任务三 达标时间分布直方图", plot_compliance_time_distribution_hist, OUTPUT_PNG_DIR),
-        ("任务三 环境影响分布直方图", plot_environmental_impact_distribution_hist, OUTPUT_PNG_DIR),
-        ("任务三 目标权衡KDE图", plot_objective_tradeoff_kdeplot, OUTPUT_PNG_DIR),
-        ("任务三 环境影响小提琴图", plot_environmental_impact_violin_by_scheme, OUTPUT_PNG_DIR),
-        ("任务三 成本小提琴图", plot_cost_violin_by_scheme, OUTPUT_PNG_DIR),
-        ("任务三 达标时间小提琴图", plot_compliance_time_violin_by_scheme, OUTPUT_PNG_DIR),
-        ("任务一 H3 表面浓度KDE地图", plot_h3_surface_concentration_kde_map, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 到达时间KDE地图", plot_sr90_arrival_time_kde_map, OUTPUT_PNG_DIR),
-        ("任务一 C14 深度-时间等值线图", plot_c14_depth_time_contourf, OUTPUT_PNG_DIR),
-        ("任务一 I129 表面浓度与洋流矢量图", plot_i129_global_diffusion_quiver_map, OUTPUT_PNG_DIR),
-        ("任务二 各国综合风险得分柱状图 (带误差棒)", plot_country_risk_score_barplot_with_error, OUTPUT_PNG_DIR),
-        ("任务二 指标贡献度堆叠面积图", plot_indicator_contribution_to_score_stacked_area, OUTPUT_PNG_DIR),
-        ("任务二 风险维度对比雷达图", plot_risk_dimension_comparison_radar, OUTPUT_PNG_DIR),
-        ("任务二 指标相关性聚类热图", plot_indicator_correlation_clustermap, OUTPUT_PNG_DIR),
-        ("任务三 帕累托前沿三维散点图 (带标签)", plot_pareto_front_scatter_3d_with_labels, OUTPUT_PNG_DIR),
-        ("任务三 目标权衡Hexbin图", plot_objective_tradeoff_hexbin, OUTPUT_PNG_DIR),
-        ("任务一 H3 浓度快照", plot_concentration_snapshots, OUTPUT_PNG_DIR),
-        # 新增的19个3D曲面图
-        ("任务一 H3 表面浓度 3D 曲面图 (初始时间)", plot_h3_surface_concentration_3d_initial, OUTPUT_PNG_DIR),
-        ("任务一 H3 表面浓度 3D 曲面图 (中期时间)", plot_h3_surface_concentration_3d_middle, OUTPUT_PNG_DIR),
-        ("任务一 H3 表面浓度 3D 曲面图 (最终时间)", plot_h3_surface_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 C14 表面浓度 3D 曲面图 (初始时间)", plot_c14_surface_concentration_3d_initial, OUTPUT_PNG_DIR),
-        ("任务一 C14 表面浓度 3D 曲面图 (中期时间)", plot_c14_surface_concentration_3d_middle, OUTPUT_PNG_DIR),
-        ("任务一 C14 表面浓度 3D 曲面图 (最终时间)", plot_c14_surface_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 表面浓度 3D 曲面图 (初始时间)", plot_sr90_surface_concentration_3d_initial, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 表面浓度 3D 曲面图 (中期时间)", plot_sr90_surface_concentration_3d_middle, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 表面浓度 3D 曲面图 (最终时间)", plot_sr90_surface_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 I129 表面浓度 3D 曲面图 (初始时间)", plot_i129_surface_concentration_3d_initial, OUTPUT_PNG_DIR),
-        ("任务一 I129 表面浓度 3D 曲面图 (中期时间)", plot_i129_surface_concentration_3d_middle, OUTPUT_PNG_DIR),
-        ("任务一 I129 表面浓度 3D 曲面图 (最终时间)", plot_i129_surface_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 H3 50m 深度浓度 3D 曲面图 (最终时间)", plot_h3_50m_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 C14 50m 深度浓度 3D 曲面图 (最终时间)", plot_c14_50m_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 50m 深度浓度 3D 曲面图 (最终时间)", plot_sr90_50m_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 I129 50m 深度浓度 3D 曲面图 (最终时间)", plot_i129_50m_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 H3 200m 深度浓度 3D 曲面图 (最终时间)", plot_h3_200m_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 C14 200m 深度浓度 3D 曲面图 (最终时间)", plot_c14_200m_concentration_3d_final, OUTPUT_PNG_DIR),
-        ("任务一 Sr90 200m 深度浓度 3D 曲面图 (最终时间)", plot_sr90_200m_concentration_3d_final, OUTPUT_PNG_DIR),
+        # ("任务一 H3 表面浓度热图", plot_h3_surface_concentration_heatmap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 到达时间地图", plot_sr90_arrival_time_map, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 各核素源点浓度对比曲线", plot_nuclide_comparison_line_plot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 原始指标各国对比柱状图", plot_raw_indicators_bar_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 标准化指标热力图", plot_normalized_indicators_heatmap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 权重对比柱状图", plot_weights_comparison_bar_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 综合风险得分与分类柱状图", plot_risk_score_classification_bar_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 K-means 肘部法则图", plot_elbow_method_plot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 帕累托前沿三维散点图", plot_pareto_front_3d_scatter, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 环境影响时间序列图", plot_environmental_impact_timeseries, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 浓度深度剖面图", plot_h3_depth_profile, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 港口浓度时间序列图", plot_sr90_time_series_at_ports, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 三维浓度切片图", plot_c14_3d_concentration_slice, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 全球扩散快照", plot_i129_global_diffusion_snapshots, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 各核素表面浓度对比图", plot_all_nuclides_surface_comparison, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 浓度超阈值区域时间序列图", plot_h3_concentration_exceedance_area, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 深度积分浓度地图", plot_sr90_depth_integrated_concentration_map, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 各国风险指标雷达图", plot_country_radar_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 综合风险得分聚类散点图", plot_risk_score_scatter_with_clusters, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 风险等级分布饼图", plot_risk_level_distribution, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 各指标对综合风险得分的贡献度", plot_indicator_contribution_to_score, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 各国在不同风险维度上的加权得分", plot_risk_dimension_comparison, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 标准化风险指标箱线图", plot_normalized_indicators_boxplot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 标准化风险指标相关性热图", plot_correlation_heatmap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 帕累托前沿二维投影图", plot_pareto_front_2d_projections, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 处理方案成本构成图", plot_scheme_cost_breakdown, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 各核素达标时间对比图", plot_nuclide_compliance_time_comparison, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 处理方案决策矩阵热图", plot_decision_matrix_heatmap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 各核素对环境影响的贡献图", plot_environmental_impact_by_nuclide, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 成本 vs 达标时间散点图", plot_cost_vs_compliance_time, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 表面浓度小提琴图", plot_h3_surface_concentration_violin, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 各核素到达时间KDE图", plot_nuclide_arrival_time_kde, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 深度-时间热图", plot_h3_depth_time_heatmap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 表面浓度等高线图", plot_sr90_surface_concentration_contour, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 深度分布箱线图", plot_c14_depth_distribution_boxen, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 各核素时间序列分面图", plot_nuclide_time_series_facetgrid, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 到达时间3D散点图", plot_sr90_arrival_time_scatter_3d, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 表面浓度与洋流矢量图", plot_i129_global_diffusion_quiver_map, INPUT_PATHS, OUTPUT_GIF_DIR), # Changed from animation to quiver map
+        # ("任务二 综合风险得分分布直方图", plot_risk_score_distribution_hist, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 指标两两关系图", plot_indicator_pairplot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 权重饼图", plot_weights_pie_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 综合风险得分Swarmplot", plot_risk_score_swarmplot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 帕累托前沿平行坐标图", plot_pareto_front_parallel_coordinates, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 核素去除率对比热图", plot_nuclide_eta_comparison_heatmap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 成本 vs 环境影响联合分布图", plot_cost_vs_environmental_impact_jointplot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 帕累托前沿散点矩阵图", plot_pareto_front_scatter_matrix, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 核素半衰期对比图", plot_nuclide_decay_half_life_bar, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 成本 vs 达标时间分面图", plot_cost_vs_compliance_time_facetgrid, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 环境影响时间序列线图", plot_environmental_impact_timeseries_stacked, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 目标权衡散点图", plot_objective_tradeoff_scatter, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 各核素全球最大浓度对比图", plot_nuclide_max_concentration_comparison, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 深度切片动画", plot_sr90_depth_slice_animation, INPUT_PATHS, OUTPUT_GIF_DIR),
+        # ("任务一 源项强度对比图", plot_mission1_source_term_comparison, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 风险等级排序热图", plot_risk_score_heatmap_by_indicator, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 风险得分KDE分面图", plot_risk_score_distribution_kde_facetgrid, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 权重堆叠柱状图", plot_weights_stacked_bar_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 风险维度小提琴图", plot_risk_score_violin_by_dimension, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 风险得分聚类热图", plot_risk_score_clustermap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 帕累托前沿雷达图", plot_pareto_front_radar_chart, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 目标权衡两两关系图", plot_objective_tradeoff_pairplot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 环境影响箱线图", plot_environmental_impact_boxplot_by_scheme, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 成本分布直方图", plot_cost_distribution_hist, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 达标时间分布直方图", plot_compliance_time_distribution_hist, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 环境影响分布直方图", plot_environmental_impact_distribution_hist, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 目标权衡KDE图", plot_objective_tradeoff_kdeplot, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 环境影响小提琴图", plot_environmental_impact_violin_by_scheme, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 成本小提琴图", plot_cost_violin_by_scheme, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 达标时间小提琴图", plot_compliance_time_violin_by_scheme, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 表面浓度KDE地图", plot_h3_surface_concentration_kde_map, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 到达时间KDE地图", plot_sr90_arrival_time_kde_map, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 深度-时间等值线图", plot_c14_depth_time_contourf, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 表面浓度与洋流矢量图", plot_i129_global_diffusion_quiver_map, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 各国综合风险得分柱状图 (带误差棒)", plot_country_risk_score_barplot_with_error, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 指标贡献度堆叠面积图", plot_indicator_contribution_to_score_stacked_area, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 风险维度对比雷达图", plot_risk_dimension_comparison_radar, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务二 指标相关性聚类热图", plot_indicator_correlation_clustermap, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 帕累托前沿三维散点图 (带标签)", plot_pareto_front_scatter_3d_with_labels, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务三 目标权衡Hexbin图", plot_objective_tradeoff_hexbin, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 浓度快照", plot_concentration_snapshots, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # # 新增的19个3D曲面图
+        # ("任务一 H3 表面浓度 3D 曲面图 (初始时间)", plot_h3_surface_concentration_3d_initial, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 表面浓度 3D 曲面图 (中期时间)", plot_h3_surface_concentration_3d_middle, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 表面浓度 3D 曲面图 (最终时间)", plot_h3_surface_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 表面浓度 3D 曲面图 (初始时间)", plot_c14_surface_concentration_3d_initial, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 表面浓度 3D 曲面图 (中期时间)", plot_c14_surface_concentration_3d_middle, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 表面浓度 3D 曲面图 (最终时间)", plot_c14_surface_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 表面浓度 3D 曲面图 (初始时间)", plot_sr90_surface_concentration_3d_initial, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 表面浓度 3D 曲面图 (中期时间)", plot_sr90_surface_concentration_3d_middle, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 表面浓度 3D 曲面图 (最终时间)", plot_sr90_surface_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 表面浓度 3D 曲面图 (初始时间)", plot_i129_surface_concentration_3d_initial, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 表面浓度 3D 曲面图 (中期时间)", plot_i129_surface_concentration_3d_middle, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 表面浓度 3D 曲面图 (最终时间)", plot_i129_surface_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 50m 深度浓度 3D 曲面图 (最终时间)", plot_h3_50m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 50m 深度浓度 3D 曲面图 (最终时间)", plot_c14_50m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 50m 深度浓度 3D 曲面图 (最终时间)", plot_sr90_50m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 I129 50m 深度浓度 3D 曲面图 (最终时间)", plot_i129_50m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 H3 200m 深度浓度 3D 曲面图 (最终时间)", plot_h3_200m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 C14 200m 深度浓度 3D 曲面图 (最终时间)", plot_c14_200m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # ("任务一 Sr90 200m 深度浓度 3D 曲面图 (最终时间)", plot_sr90_200m_concentration_3d_final, INPUT_PATHS, OUTPUT_PNG_DIR),
+        # 新增的绘图功能
+        ("关键监测点核素浓度十年变化曲线", plot_key_points_concentration, INPUT_PATHS, OUTPUT_PNG_DIR),
     ]
 
     results = []
 
-    for plot_name, plot_func, output_dir in plot_functions:
+    for plot_name, plot_func, input_paths_dict, output_dir in plot_functions:
         print(f"\n--- 正在生成: {plot_name} ---")
         try:
             # 将统一的路径传递给每个绘图函数
-            plot_func(INPUT_PATHS, output_dir)
+            plot_func(input_paths_dict, output_dir)
             results.append(f"[成功] {plot_name}")
         except Exception as e:
             results.append(f"[失败] {plot_name}: {e}")
@@ -277,4 +291,16 @@ if __name__ == "__main__":
     # current_dir = os.path.dirname(os.path.abspath(__file__))
     # if current_dir not in sys.path:
     #     sys.path.insert(0, current_dir)
-    run_all_visualizations()
+
+    resolution_param = 1.0 # 默认分辨率
+    if len(sys.argv) > 1:
+        try:
+            resolution_param = float(sys.argv[1])
+            if resolution_param <= 0:
+                raise ValueError("分辨率必须是正数")
+        except ValueError as e:
+            print(f"错误: 无效的分辨率参数. {e}")
+            print("用法: python visualize.py [分辨率 (例如: 0.5, 1.0)]")
+            sys.exit(1)
+
+    run_all_visualizations(resolution_param)
