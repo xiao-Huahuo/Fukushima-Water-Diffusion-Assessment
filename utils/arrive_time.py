@@ -91,7 +91,7 @@ from datetime import datetime
 
 # 配置
 NUCLIDES = ["H3", "C14", "Sr90", "I129"]
-OUTPUT_DIR = "../outputs"
+OUTPUT_DIR = "../outputs/mission1"
 C_THRESHOLD = 0.1  # Bq/m³ (根据题目要求)
 
 
